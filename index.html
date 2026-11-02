@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>แจ้งรายละเอียดงานศพ บุคคลในครอบครัวของพนักงาน</title>
+<!-- ฟอนต์ไทยจาก Google Fonts (CDN เดียวที่ใช้) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== ตัวแปรสี (โหมดสว่าง) ===== */
+  :root{
+    --bg:#f2f3f5; --card:#ffffff; --text:#1f2933; --muted:#52606d;
+    --primary:#2c3e50; --primary-text:#ffffff; --border:#c5cbd3;
+    --focus:#3b5b7a; --error:#b3261e; --error-bg:#fdecea;
+    --btn2:#e4e7eb; --btn2-text:#1f2933; --line:#3f6b4f;
+    --admin-bg:#eef1f5; --preview-bg:#f5f7f9;
+    --radius:12px;
+  }
+  /* ===== โหมดมืด ===== */
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14171a; --card:#1e2328; --text:#e4e7eb; --muted:#a8b2bd;
+      --primary:#8fa9c4; --primary-text:#10161c; --border:#3e4750;
+      --focus:#a9c1d9; --error:#f2b8b5; --error-bg:#3a1f1d;
+      --btn2:#2d343b; --btn2-text:#e4e7eb; --line:#7fae8e;
+      --admin-bg:#232a31; --preview-bg:#252b31;
+    }
+  }
+  *{box-sizing:border-box}
+  html{font-size:16px}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;
+    font-size:1rem; line-height:1.6;
+  }
+  [hidden]{display:none !important}
+  .wrap{max-width:720px; margin:0 auto; padding:16px 14px 120px}
+  header{text-align:center; padding:12px 0 8px}
+  header h1{font-size:1.35rem; margin:0 0 4px; color:var(--text)}
+  header p{margin:0; color:var(--muted); font-size:1rem}
+  .ribbon{font-size:1.6rem}
+
+  /* ===== การ์ดแต่ละส่วน ===== */
+  fieldset.card, section.card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:16px; margin:16px 0;
+  }
+  legend{font-weight:700; font-size:1.1rem; padding:0 6px; color:var(--text)}
+  .field{margin-bottom:14px}
+  .row2{display:grid; grid-template-columns:1fr; gap:0 12px}
+  @media (min-width:560px){ .row2{grid-template-columns:1fr 1fr} }
+
+  label, .label{display:block; font-weight:600; margin-bottom:6px}
+  .req{color:var(--error)}
+  .hint{font-size:.9rem; color:var(--muted); margin-top:4px}
+
+  input, textarea, select{
+    width:100%; min-height:48px; padding:10px 12px;
+    font:inherit; font-size:16px; /* กัน iOS ซูมอัตโนมัติ */
+    color:var(--text); background:var(--card);
+    border:1.5px solid var(--border); border-radius:10px;
+  }
+  /* Select: ใช้ลูกศรของตัวเอง ให้หน้าตาเหมือนกันทุกเบราว์เซอร์ */
+  select{
+    -webkit-appearance:none; appearance:none; cursor:pointer; padding-right:40px;
+    background-image:linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                     linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+    background-size:6px 6px; background-repeat:no-repeat;
+  }
+  /* ช่องพิมพ์เอง (แสดงเมื่อเลือก "อื่น ๆ") */
+  .other-input{margin-top:8px}
+  textarea{min-height:110px; resize:vertical}
+  input:focus, textarea:focus, select:focus, button:focus-visible,
+  .radio input:focus-visible + span, .switch input:focus-visible + .track{
+    outline:3px solid var(--focus); outline-offset:2px;
+  }
+  .invalid{border-color:var(--error); background:var(--error-bg)}
+  .error{color:var(--error); font-size:.95rem; margin-top:4px}
+
+  /* ===== ปุ่มตัวเลือกแบบ radio ===== */
+  .radios{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px}
+  @media (min-width:560px){ .radios{grid-template-columns:repeat(5, 1fr)} }
+  .radios.radios-2{grid-template-columns:1fr 1fr}
+  .radio{position:relative; margin:0}
+  .radio input{position:absolute; opacity:0; width:1px; height:1px}
+  .radio span{
+    display:flex; align-items:center; justify-content:center;
+    min-height:48px; border:1.5px solid var(--border); border-radius:10px;
+    cursor:pointer; font-weight:600; background:var(--card);
+  }
+  .radio input:checked + span{background:var(--primary); color:var(--primary-text); border-color:var(--primary)}
+  .sub-field{margin-top:12px; padding-left:12px; border-left:3px solid var(--border)}
+
+  /* ===== แถวข้อมูลพี่น้อง ===== */
+  .sib-fields{display:grid; grid-template-columns:1fr; gap:8px}
+  @media (min-width:560px){
+    .sib-fields{grid-template-columns:1fr 1fr}
+    .sib-fields .full{grid-column:1 / -1}
+  }
+
+  /* ===== กล่องแสดงสถานที่ (กรณีใช้สถานที่เดียวกับสวดอภิธรรม) ===== */
+  .preview{
+    background:var(--preview-bg); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; white-space:pre-wrap; margin-bottom:14px;
+  }
+  .preview-title{font-weight:600; color:var(--muted); font-size:.9rem; margin-bottom:4px}
+  .preview .empty{color:var(--muted); font-style:italic}
+
+  /* ===== ส่วนเสริมสำหรับเสมียน/Admin ===== */
+  fieldset.card.admin{background:var(--admin-bg); border-style:dashed}
+  .admin-badge{
+    display:inline-block; font-size:.85rem; font-weight:600; padding:2px 10px;
+    border-radius:999px; background:var(--btn2); color:var(--muted); border:1px solid var(--border);
+  }
+  .switch{
+    display:flex; align-items:center; gap:12px; min-height:48px; cursor:pointer;
+    font-weight:600; margin:0; position:relative;
+  }
+  .switch input{position:absolute; opacity:0; width:1px; height:1px}
+  .switch .track{
+    flex:0 0 auto; width:52px; height:30px; border-radius:999px; position:relative;
+    background:var(--border); transition:.2s;
+  }
+  .switch .track::after{
+    content:""; position:absolute; top:3px; left:3px; width:24px; height:24px;
+    border-radius:50%; background:#fff; transition:.2s;
+  }
+  .switch input:checked + .track{background:var(--primary)}
+  .switch input:checked + .track::after{transform:translateX(22px)}
+  #travelBody{margin-top:14px; padding-top:14px; border-top:1px solid var(--border)}
+
+  /* ===== แถวรายชื่อ (ผู้ไปร่วมงาน / พี่น้อง) ===== */
+  .att-row{
+    display:grid; grid-template-columns:28px 1fr; gap:8px; background:var(--card);
+    border:1px dashed var(--border); border-radius:10px; padding:10px; margin-bottom:10px;
+  }
+  .att-num{font-weight:700; padding-top:12px; text-align:center}
+  .att-fields{display:grid; grid-template-columns:1fr; gap:8px}
+  @media (min-width:560px){ .att-fields{grid-template-columns:2fr 1fr auto} }
+
+  /* ===== ปุ่ม ===== */
+  button{
+    font:inherit; font-size:1rem; font-weight:600; min-height:48px;
+    padding:10px 16px; border-radius:10px; border:none; cursor:pointer;
+  }
+  .btn-primary{background:var(--primary); color:var(--primary-text)}
+  .btn-secondary{background:var(--btn2); color:var(--btn2-text); border:1px solid var(--border)}
+  .btn-line{background:var(--line); color:#fff}
+  @media (prefers-color-scheme: dark){ .btn-line{color:#10161c} }
+  .btn-danger{background:transparent; color:var(--error); border:1.5px solid var(--error)}
+  .btn-block{width:100%}
+  .btn-remove{min-width:48px}
+  .actions{display:grid; gap:10px; grid-template-columns:1fr}
+  @media (min-width:560px){ .actions{grid-template-columns:1fr 1fr} }
+
+  /* ===== กล่องข้อความสรุป ===== */
+  #output{white-space:pre-wrap; min-height:280px; font-size:16px; line-height:1.7}
+
+  /* ===== Toast แจ้งเตือน ===== */
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+    background:var(--primary); color:var(--primary-text); padding:12px 20px;
+    border-radius:999px; opacity:0; pointer-events:none; transition:.25s; z-index:50;
+    max-width:90vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .draft-note{text-align:center; color:var(--muted); font-size:.9rem; margin-top:8px}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="ribbon" aria-hidden="true">🖤ขอแสดงความเสียใจด้วยนะคะ🖤</div>
+    <h1>แจ้งรายละเอียดงานศพ บุคคลในครอบครัวของพนักงาน PRODUCTION 3 (BP)</h1>
+    <p>(บิดา / มารดา / บุตร / สามี / ภรรยา)</p>
+    <p>พนักงานกรอกส่วนที่ 1–4 แล้วกด "สร้างข้อความสรุป" เพื่อส่งกลับมาให้น้องเสมียน/ผู้ประสานงาน</p>
+  </header>
+
+  <form id="funeralForm" novalidate>
+    <!-- ===== 1) ข้อมูลพนักงาน ===== -->
+    <fieldset class="card">
+      <legend>1) ข้อมูลพนักงาน</legend>
+      <div class="field">
+        <label for="empName">ชื่อพนักงาน <span class="req" aria-hidden="true">*</span></label>
+        <input id="empName" name="empName" type="text" autocomplete="name" required aria-describedby="empName-err">
+        <div class="error" id="empName-err" role="alert"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="empId">รหัสพนักงาน <span class="req" aria-hidden="true">*</span></label>
+          <input id="empId" name="empId" type="text" inputmode="numeric" required aria-describedby="empId-err">
+          <div class="error" id="empId-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <label for="empPhone">เบอร์โทรพนักงาน <span class="req" aria-hidden="true">*</span></label>
+          <input id="empPhone" name="empPhone" type="tel" inputmode="tel" autocomplete="tel"
+                 placeholder="0812345678" maxlength="12" required aria-describedby="empPhone-hint empPhone-err">
+          <div class="hint" id="empPhone-hint">เบอร์มือถือ 10 หลัก ขึ้นต้นด้วย 0</div>
+          <div class="error" id="empPhone-err" role="alert"></div>
+        </div>
+      </div>
+
+      <!-- Drop List: แผนก (XFUNC) / ไลน์,Process (XLINE) / ตำแหน่ง (XJOB)
+           ตัวเลือกสร้างจากรายการใน JavaScript (ดู DEPT_OPTIONS / LINE_OPTIONS / JOB_OPTIONS)
+           เลือก "อื่น ๆ (พิมพ์เอง)" เพื่อกรอกค่าที่ไม่มีในรายการ -->
+      <div class="field">
+        <label for="empDeptSel">แผนก <span class="req" aria-hidden="true">*</span></label>
+        <select id="empDeptSel" class="combo" data-target="empDept" data-list="dept" aria-describedby="empDept-err"></select>
+        <label for="empDept" class="sr-only">แผนก (พิมพ์เอง)</label>
+        <input id="empDept" name="empDept" type="text" class="other-input" placeholder="พิมพ์ชื่อแผนก" hidden>
+        <div class="error" id="empDept-err" role="alert"></div>
+      </div>
+      <div class="field">
+        <label for="empLineSel">ไลน์ / Process <span class="req" aria-hidden="true">*</span></label>
+        <select id="empLineSel" class="combo" data-target="empLine" data-list="line" aria-describedby="empLine-hint empLine-err"></select>
+        <label for="empLine" class="sr-only">ไลน์ / Process (พิมพ์เอง)</label>
+        <input id="empLine" name="empLine" type="text" class="other-input" placeholder="พิมพ์ชื่อไลน์ / Process" hidden>
+        <div class="hint" id="empLine-hint">ตัวอักษรท้ายชื่อคือกะ: -W / -Y / -D</div>
+        <div class="error" id="empLine-err" role="alert"></div>
+      </div>
+      <div class="field">
+        <label for="empPositionSel">ตำแหน่ง <span class="req" aria-hidden="true">*</span></label>
+        <select id="empPositionSel" class="combo" data-target="empPosition" data-list="job" aria-describedby="empPosition-err"></select>
+        <label for="empPosition" class="sr-only">ตำแหน่ง (พิมพ์เอง)</label>
+        <input id="empPosition" name="empPosition" type="text" class="other-input" placeholder="พิมพ์ตำแหน่ง" hidden>
+        <div class="error" id="empPosition-err" role="alert"></div>
+      </div>
+
+      <!-- ===== คำถาม: มีพี่น้องทำงานที่บริษัทหรือไม่ ===== -->
+      <div class="field" role="radiogroup" aria-labelledby="sibling-label" aria-describedby="sibling-err">
+        <span class="label" id="sibling-label">พนักงานมีพี่น้องทำงานที่บริษัทหรือไม่? <span class="req" aria-hidden="true">*</span></span>
+        <div class="radios radios-2">
+          <label class="radio"><input type="radio" name="sibling" value="มี" aria-controls="siblingWrap"><span>มี</span></label>
+          <label class="radio"><input type="radio" name="sibling" value="ไม่มี" aria-controls="siblingWrap"><span>ไม่มี</span></label>
+        </div>
+        <div class="error" id="sibling-err" role="alert"></div>
+
+        <!-- แสดงเฉพาะเมื่อเลือก "มี" — เพิ่มพี่น้องได้หลายคน -->
+        <div class="sub-field" id="siblingWrap" hidden>
+          <span class="label" id="sib-label">โปรดระบุข้อมูลพี่น้อง <span class="req" aria-hidden="true">*</span></span>
+          <p class="hint" style="margin-top:0">ช่องตำแหน่งและแผนก/ฝ่าย กดแล้วจะมีรายการให้เลือก หรือพิมพ์เองได้</p>
+          <div id="siblings" role="group" aria-labelledby="sib-label"></div>
+          <div class="error" id="siblings-err" role="alert"></div>
+          <button type="button" class="btn-secondary btn-block" id="addSibling">➕ เพิ่มพี่น้อง</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- รายการแนะนำสำหรับช่องพี่น้อง (เลือกได้ หรือพิมพ์เอง) -->
+    <datalist id="jobList"></datalist>
+    <datalist id="deptList"></datalist>
+
+    <!-- ===== 2) ข้อมูลผู้เสียชีวิต ===== -->
+    <fieldset class="card">
+      <legend>2) ข้อมูลผู้เสียชีวิต</legend>
+      <div class="field" role="radiogroup" aria-labelledby="relation-label" aria-describedby="relation-err">
+        <span class="label" id="relation-label">ความเกี่ยวข้องกับพนักงาน <span class="req" aria-hidden="true">*</span></span>
+        <div class="radios">
+          <label class="radio"><input type="radio" name="relation" value="บิดา"><span>บิดา</span></label>
+          <label class="radio"><input type="radio" name="relation" value="มารดา"><span>มารดา</span></label>
+          <label class="radio"><input type="radio" name="relation" value="บุตร"><span>บุตร</span></label>
+          <label class="radio"><input type="radio" name="relation" value="สามี"><span>สามี</span></label>
+          <label class="radio"><input type="radio" name="relation" value="ภรรยา"><span>ภรรยา</span></label>
+        </div>
+        <div class="error" id="relation-err" role="alert"></div>
+      </div>
+      <div class="field">
+        <label for="deceasedName">ชื่อ-นามสกุลผู้เสียชีวิต <span class="req" aria-hidden="true">*</span></label>
+        <input id="deceasedName" name="deceasedName" type="text" required aria-describedby="deceasedName-err">
+        <div class="error" id="deceasedName-err" role="alert"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="deathDate">วันที่เสียชีวิต <span class="req" aria-hidden="true">*</span></label>
+          <input id="deathDate" name="deathDate" type="date" required aria-describedby="deathDate-err">
+          <div class="error" id="deathDate-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <label for="deathCause">สาเหตุการเสียชีวิต <span class="req" aria-hidden="true">*</span></label>
+          <input id="deathCause" name="deathCause" type="text" required aria-describedby="deathCause-err">
+          <div class="error" id="deathCause-err" role="alert"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ===== 3) พิธีสวดอภิธรรมศพ ===== -->
+    <fieldset class="card">
+      <legend>3) พิธีสวดอภิธรรมศพ</legend>
+      <div class="row2">
+        <div class="field">
+          <label for="prayDate">วันที่ <span class="req" aria-hidden="true">*</span></label>
+          <input id="prayDate" name="prayDate" type="date" required aria-describedby="prayDate-err">
+          <div class="error" id="prayDate-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <label for="prayTime">เวลา <span class="req" aria-hidden="true">*</span></label>
+          <input id="prayTime" name="prayTime" type="time" required aria-describedby="prayTime-err">
+          <div class="error" id="prayTime-err" role="alert"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="prayPlace">สถานที่ <span class="req" aria-hidden="true">*</span></label>
+        <textarea id="prayPlace" name="prayPlace" required aria-describedby="prayPlace-hint prayPlace-err"
+          placeholder="เช่น วัดบางพลีใหญ่ใน ศาลา 3&#10;ต.บางพลีใหญ่ อ.บางพลี จ.สมุทรปราการ&#10;จุดสังเกต: ตรงข้ามตลาด..."></textarea>
+        <div class="hint" id="prayPlace-hint">ชื่อวัด/ศาลา, ที่อยู่, ตำบล/อำเภอ/จังหวัด, จุดสังเกต</div>
+        <div class="error" id="prayPlace-err" role="alert"></div>
+      </div>
+      <div class="field">
+        <label for="prayMap">ลิงก์ Google Maps (ไม่บังคับ)</label>
+        <input id="prayMap" name="prayMap" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/..." aria-describedby="prayMap-err">
+        <div class="error" id="prayMap-err" role="alert"></div>
+      </div>
+    </fieldset>
+
+    <!-- ===== 4) พิธีฌาปนกิจ ===== -->
+    <fieldset class="card">
+      <legend>4) พิธีฌาปนกิจ</legend>
+      <div class="row2">
+        <div class="field">
+          <label for="cremDate">วันที่ <span class="req" aria-hidden="true">*</span></label>
+          <input id="cremDate" name="cremDate" type="date" required aria-describedby="cremDate-err">
+          <div class="error" id="cremDate-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <label for="cremTime">เวลา <span class="req" aria-hidden="true">*</span></label>
+          <input id="cremTime" name="cremTime" type="time" required aria-describedby="cremTime-err">
+          <div class="error" id="cremTime-err" role="alert"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cremPlaceMode">สถานที่ฌาปนกิจ <span class="req" aria-hidden="true">*</span></label>
+        <select id="cremPlaceMode" name="cremPlaceMode" aria-controls="cremSamePreview cremPlaceWrap">
+          <option value="same" selected>สถานที่เดียวกับพิธีสวดอภิธรรมศพ</option>
+          <option value="other">ระบุสถานที่ใหม่</option>
+        </select>
+      </div>
+      <div class="preview" id="cremSamePreview" aria-live="polite">
+        <div class="preview-title">สถานที่ (จากพิธีสวดอภิธรรมศพ)</div>
+        <div id="cremSameText"></div>
+      </div>
+      <div id="cremPlaceWrap" hidden>
+        <div class="field">
+          <label for="cremPlace">สถานที่ <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="cremPlace" name="cremPlace" aria-describedby="cremPlace-hint cremPlace-err"
+            placeholder="ชื่อวัด/ศาลา, ที่อยู่, ตำบล/อำเภอ/จังหวัด, จุดสังเกต"></textarea>
+          <div class="hint" id="cremPlace-hint">ชื่อวัด/ศาลา, ที่อยู่, ตำบล/อำเภอ/จังหวัด, จุดสังเกต</div>
+          <div class="error" id="cremPlace-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <label for="cremMap">ลิงก์ Google Maps (ไม่บังคับ)</label>
+          <input id="cremMap" name="cremMap" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/..." aria-describedby="cremMap-err">
+          <div class="error" id="cremMap-err" role="alert"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ===== 5) ส่วนเสริม: การเดินทางไปร่วมงาน (สำหรับเสมียน/Admin) ===== -->
+    <fieldset class="card admin">
+      <legend>5) การเดินทางไปร่วมงาน</legend>
+      <span class="admin-badge">ส่วนเสริม • สำหรับเสมียน/Admin</span>
+      <p class="hint" style="margin:8px 0 4px">พนักงานที่แจ้งเรื่อง <strong>ไม่ต้องกรอก</strong> ส่วนนี้</p>
+
+      <label class="switch" for="travelOn">
+        <input type="checkbox" id="travelOn" name="travelOn" aria-controls="travelBody" aria-expanded="false">
+        <span class="track" aria-hidden="true"></span>
+        <span>เพิ่มข้อมูลการเดินทางไปร่วมงาน</span>
+      </label>
+
+      <div id="travelBody" hidden>
+        <div class="field">
+          <label for="attendDate">วันที่ไปร่วมงาน <span class="req" aria-hidden="true">*</span></label>
+          <input id="attendDate" name="attendDate" type="date" aria-describedby="attendDate-err">
+          <div class="error" id="attendDate-err" role="alert"></div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="departDate">วันที่ออกเดินทาง <span class="req" aria-hidden="true">*</span></label>
+            <input id="departDate" name="departDate" type="date" aria-describedby="departDate-err">
+            <div class="error" id="departDate-err" role="alert"></div>
+          </div>
+          <div class="field">
+            <label for="departTime">เวลาออกเดินทาง <span class="req" aria-hidden="true">*</span></label>
+            <input id="departTime" name="departTime" type="time" aria-describedby="departTime-err">
+            <div class="error" id="departTime-err" role="alert"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="meetPoint">จุดนัดพบ <span class="req" aria-hidden="true">*</span></label>
+          <input id="meetPoint" name="meetPoint" type="text" value="Sports Complex" aria-describedby="meetPoint-err">
+          <div class="error" id="meetPoint-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <span class="label" id="att-label">รายชื่อพนักงานที่ไปร่วมงาน <span class="req" aria-hidden="true">*</span></span>
+          <div id="attendees" role="group" aria-labelledby="att-label"></div>
+          <div class="error" id="attendees-err" role="alert"></div>
+          <button type="button" class="btn-secondary btn-block" id="addAttendee">➕ เพิ่มรายชื่อ</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ===== ปุ่มหลัก ===== -->
+    <div class="actions">
+      <button type="submit" class="btn-primary btn-block">📝 สร้างข้อความสรุป</button>
+      <button type="button" class="btn-danger btn-block" id="clearBtn">🗑️ ล้างฟอร์ม</button>
+    </div>
+    <p class="draft-note">ระบบบันทึกฉบับร่างในเครื่องนี้อัตโนมัติ (ไม่มีการส่งข้อมูลออกไปที่ใด)</p>
+  </form>
+
+  <!-- ===== ผลลัพธ์ข้อความสรุป ===== -->
+  <section class="card" id="resultCard" hidden aria-labelledby="result-title">
+    <h2 id="result-title" style="font-size:1.15rem;margin:0 0 10px">ข้อความสรุป</h2>
+    <label for="output" class="sr-only">ข้อความสรุป (แก้ไขได้ก่อนคัดลอก)</label>
+    <textarea id="output"></textarea>
+    <div class="actions" style="margin-top:12px">
+      <button type="button" class="btn-primary btn-block" id="copyBtn">📋 คัดลอกข้อความ</button>
+      <button type="button" class="btn-line btn-block" id="lineBtn">💬 ส่งให้เสมียน/ผู้ประสานงานทาง LINE</button>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:8px">
+      กด "ส่งให้เสมียน/ผู้ประสานงานทาง LINE" แล้วเลือกแชทของเสมียน/ผู้ประสานงาน หรือคัดลอกข้อความไปวางในแชทเอง
+    </p>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =====================================================================
+     รายการตัวเลือก Drop List (มาจากคอลัมน์ในไฟล์รายชื่อ — ไม่มีข้อมูลส่วนบุคคล)
+     แก้ไข/เพิ่ม/ลบ ได้ที่นี่ บรรทัดละ 1 ค่า
+     ===================================================================== */
+
+  // แผนก (XFUNC)
+  const DEPT_OPTIONS = [
+    'ASSEMBLY PRODUCTION NO.1 (BP)',
+    'ASSEMBLY PRODUCTION NO.2 (BP)',
+    'ASSEMBLY PARTS LOGISTICS (BP)',
+    'ASSEMBLY & LOGISTICS ENGINEERING SERVICE'
+  ];
+
+  // ไลน์ / Process (XLINE) — ตัวท้ายคือกะ -W / -Y / -D
+  const LINE_OPTIONS = [
+    '(A) JISHUKEN & KAIZEN (BP)', '(A) JISHUKEN & KAIZEN (BP)-W', '(A) JISHUKEN & KAIZEN (BP)-Y',
+    '(A) LOGISTICS KAIZEN', '(A) LOGISTICS KAIZEN - W', '(A) LOGISTICS KAIZEN - Y',
+    '(A) NEWCOMER TRAINING (BP)-D', '(A) NEWCOMER TRAINING (BP)-W', '(A) NEWCOMER TRAINING (BP)-Y',
+    '(A) VC PACKAGE-W', '(A) VC PACKAGE-Y',
+    'AXLE (BP)-W', 'AXLE (BP)-Y',
+    'BEV LINE-D', 'BEV LINE (AL)-D',
+    'BUFFER MANPOWER (A)-W', 'BUFFER MANPOWER (A)-Y',
+    'BUFFER MANPOWER (AL)-D', 'BUFFER MANPOWER (AL)-W', 'BUFFER MANPOWER (AL)-Y',
+    'CHASSIS 1 (BP)-W', 'CHASSIS 1 (BP)-Y', 'CHASSIS 2 (BP)-W', 'CHASSIS 2 (BP)-Y',
+    'COMMON-ASSEMBLY ENGINEERING SERVICE-D',
+    'COMMON-ASSEMBLY PARTS LOGISTIC NO.1-D', 'COMMON-ASSEMBLY PARTS LOGISTIC NO.2-D',
+    'COMMON-ASSEMBLY SHOP NO.1-D', 'COMMON-ASSEMBLY SHOP NO.2-D',
+    'DOOR (BP)-W', 'DOOR (BP)-Y',
+    'EMPLOYEE REPRESENTATIVE (AL)',
+    'ENGINE (BP)-W', 'ENGINE (BP)-Y',
+    'FINAL 1 (BP)-W', 'FINAL 1 (BP)-Y', 'FINAL 2 (BP)-W', 'FINAL 2 (BP)-Y',
+    'FINAL 3 (BP)-W', 'FINAL 3 (BP)-Y',
+    'FRAME-1 (BP)-W', 'FRAME-1 (BP)-Y', 'FRAME-2 (BP)-W', 'FRAME-2 (BP)-Y',
+    'IP (BP)-W', 'IP (BP)-Y',
+    'NEWCOMER TRAINING (AL)-D',
+    'P1/P2/P3/1 (BP)-W', 'P1/P2/P3/1 (BP)-Y', 'P1/P2/P3/2 (BP)-W', 'P1/P2/P3/2 (BP)-Y',
+    'P4/P5/PH/1 (BP)-W', 'P4/P5/PH/1 (BP)-Y',
+    'QG (QUALITY GATE) (BP)-W', 'QG (QUALITY GATE) (BP)-Y',
+    'REPAIR (BP)-W', 'REPAIR (BP)-Y',
+    'SPECIAL ASSIGNMENT (A)-W', 'SPECIAL ASSIGNMENT (A)-Y', 'SPECIAL ASSIGNMENT (AL)-D',
+    'SPECIAL GROUP (A)-D', 'SPECIAL GROUP (AL) -D',
+    'SPS&SEQ 1/2-W', 'SPS&SEQ 1/2-Y',
+    'SPS/SEQ1/1 (BP)-W', 'SPS/SEQ1/1 (BP)-Y', 'SPS/SEQ2/1 (BP)-W', 'SPS/SEQ2/1 (BP)-Y',
+    'TRIM 1 (BP)-W', 'TRIM 1 (BP)-Y', 'TRIM 2 (BP)-W', 'TRIM 2 (BP)-Y',
+    'TRY & TEST (A)-D', 'TRY & TEST (A)-W', 'TRY & TEST (AL)-D'
+  ];
+
+  // ตำแหน่ง (XJOB)
+  const JOB_OPTIONS = [
+    'TEMPORARY M3/M6',
+    'TEAM MEMBER G1', 'TEAM MEMBER G2', 'TEAM MEMBER G3',
+    'KZ TEAM MEMBER G2', 'KZ TEAM MEMBER G3', 'OS TEAM MEMBER G3',
+    'TEAM LEADER G4', 'KZ TEAM LEADER G4',
+    'GROUP LEADER G5', 'KZ GROUP LEADER G5', 'OS GROUP LEADER G5',
+    'TECHNICIAN G3', 'TECHNICIAN G4', 'PS MECHANIC G4',
+    'EXPERT TECHNICIAN G5', 'PS EXPERT TECHNICIAN G5',
+    'ENGINEER G4', 'CHIEF ENGINEER G5',
+    'SENIOR SUPERVISOR G5', 'SPECIALIST STAFF 5 GGG',
+    'ASSISTANT MANAGER G6', 'MANAGER G7', 'DEPUTY GENERAL MANAGER G8',
+    'GENERAL MANAGER G9', 'PROJECT GENERAL MANAGER G9',
+    'UNION COMMITTEE'
+  ];
+
+  const OPTION_SETS = { dept: DEPT_OPTIONS, line: LINE_OPTIONS, job: JOB_OPTIONS };
+  const OTHER = '__other__';
+
+  /* ====== ค่าคงที่ ====== */
+  const DRAFT_KEY = 'funeralFormDraft_v1';
+  const DEFAULT_MEET_POINT = 'Sports Complex';
+  const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                       'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  // ช่องที่พนักงานต้องกรอกเสมอ (ส่วนที่ 1–4)
+  const REQUIRED = {
+    empName:'กรุณากรอกชื่อพนักงาน', empId:'กรุณากรอกรหัสพนักงาน',
+    empPhone:'กรุณากรอกเบอร์โทรพนักงาน',
+    empDept:'กรุณาเลือกแผนก', empLine:'กรุณาเลือกไลน์ / Process', empPosition:'กรุณาเลือกตำแหน่ง',
+    deceasedName:'กรุณากรอกชื่อ-นามสกุลผู้เสียชีวิต', deathDate:'กรุณาเลือกวันที่เสียชีวิต',
+    deathCause:'กรุณากรอกสาเหตุการเสียชีวิต',
+    prayDate:'กรุณาเลือกวันที่สวดอภิธรรม', prayTime:'กรุณาเลือกเวลาสวดอภิธรรม',
+    prayPlace:'กรุณากรอกสถานที่สวดอภิธรรม',
+    cremDate:'กรุณาเลือกวันที่ฌาปนกิจ', cremTime:'กรุณาเลือกเวลาฌาปนกิจ'
+  };
+  const TRAVEL_REQUIRED = {
+    attendDate:'กรุณาเลือกวันที่ไปร่วมงาน', departDate:'กรุณาเลือกวันที่ออกเดินทาง',
+    departTime:'กรุณาเลือกเวลาออกเดินทาง', meetPoint:'กรุณากรอกจุดนัดพบ'
+  };
+  const SIMPLE_FIELDS = [...Object.keys(REQUIRED), ...Object.keys(TRAVEL_REQUIRED),
+                         'prayMap', 'cremPlaceMode', 'cremPlace', 'cremMap'];
+  const RADIO_GROUPS = ['relation', 'sibling'];
+
+  /* ====== อ้างอิง element ====== */
+  const $ = (id) => document.getElementById(id);
+  const form = $('funeralForm');
+  const attendeesBox = $('attendees');
+  const output = $('output');
+  const resultCard = $('resultCard');
+  const siblingWrap = $('siblingWrap');
+  const siblingsBox = $('siblings');
+  const travelOn = $('travelOn');
+  const travelBody = $('travelBody');
+  const cremPlaceMode = $('cremPlaceMode');
+  const combos = [...document.querySelectorAll('select.combo')];
+
+  /* =====================================================================
+     Drop List แบบ "เลือก หรือ พิมพ์เอง"
+     - <select class="combo"> เป็นตัวเลือก
+     - <input> ปลายทาง (data-target) เก็บค่าจริง ใช้กับ validate / ฉบับร่าง / ข้อความสรุป
+     ===================================================================== */
+
+  // สร้างตัวเลือกใน select ทุกตัว + datalist สำหรับช่องพี่น้อง
+  function buildOptions() {
+    combos.forEach(sel => {
+      const list = OPTION_SETS[sel.dataset.list] || [];
+      const add = (value, text) => {
+        const o = document.createElement('option');
+        o.value = value; o.textContent = text;
+        sel.appendChild(o);
+      };
+      add('', '— กรุณาเลือก —');
+      list.forEach(v => add(v, v));
+      add(OTHER, 'อื่น ๆ (พิมพ์เอง)');
+    });
+    [['jobList', JOB_OPTIONS], ['deptList', DEPT_OPTIONS]].forEach(([id, list]) => {
+      const dl = $(id);
+      list.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
+    });
+  }
+
+  // เมื่อเลือกใน select → อัปเดตค่าในช่องปลายทาง
+  function onComboChange(sel, focus) {
+    const input = $(sel.dataset.target);
+    const isOther = sel.value === OTHER;
+    input.hidden = !isOther;
+    input.value = isOther ? (sel.dataset.prevOther || '') : sel.value;
+    if (sel.value) {
+      sel.classList.remove('invalid');
+      $(`${input.id}-err`).textContent = '';
+    }
+    if (isOther && focus) input.focus();
+  }
+
+  // ตั้งค่า select ให้ตรงกับค่าที่บันทึกไว้ (ใช้ตอนโหลดฉบับร่าง / ล้างฟอร์ม)
+  function syncComboFromValue(sel) {
+    const input = $(sel.dataset.target);
+    const v = input.value.trim();
+    const list = OPTION_SETS[sel.dataset.list] || [];
+    if (!v) { sel.value = ''; input.hidden = true; }
+    else if (list.includes(v)) { sel.value = v; input.hidden = true; }
+    else { sel.value = OTHER; input.hidden = false; sel.dataset.prevOther = v; }
+  }
+
+  /* ====== ตัวช่วยจัดรูปแบบ ====== */
+
+  // แปลง "2026-11-02" -> "จันทร์ที่ 2 พฤศจิกายน 2569"
+  function formatThaiDate(iso) {
+    if (!iso) return '-';
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return `${THAI_DAYS[dt.getDay()]}ที่ ${d} ${THAI_MONTHS[m - 1]} ${y + 543}`;
+  }
+  const formatThaiTime = (t) => t ? `${t.replace(':', '.')} น.` : '-';
+  const digitsOnly = (s) => (s || '').replace(/\D/g, '');
+  const getRadio = (name) => {
+    const r = form.querySelector(`input[name="${name}"]:checked`);
+    return r ? r.value : '';
+  };
+  const isCremSamePlace = () => cremPlaceMode.value === 'same';
+
+  /* ====== พี่น้องที่ทำงานในบริษัท ====== */
+
+  function toggleSiblingField() {
+    const show = getRadio('sibling') === 'มี';
+    siblingWrap.hidden = !show;
+    if (show && !siblingsBox.children.length) addSiblingRow();
+    if (!show) {
+      $('siblings-err').textContent = '';
+      siblingsBox.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+    }
+  }
+
+  // เพิ่มแถวพี่น้อง: ชื่อ-นามสกุล*, ตำแหน่ง* (มีรายการให้เลือก), แผนก/ฝ่าย (มีรายการให้เลือก)
+  function addSiblingRow(s = {}, focus = false) {
+    const row = document.createElement('div');
+    row.className = 'att-row';
+    row.innerHTML = `
+      <div class="att-num" aria-hidden="true"></div>
+      <div class="sib-fields">
+        <div class="full"><label class="sib-name-label"></label>
+          <input type="text" class="sib-name" autocomplete="off" placeholder="เช่น นายสมชาย ใจดี"></div>
+        <div><label class="sib-pos-label"></label>
+          <input type="text" class="sib-pos" list="jobList" autocomplete="off" placeholder="เลือก หรือพิมพ์ตำแหน่ง"></div>
+        <div><label class="sib-dept-label"></label>
+          <input type="text" class="sib-dept" list="deptList" autocomplete="off" placeholder="เลือก หรือพิมพ์แผนก/ฝ่าย"></div>
+        <div class="full"><button type="button" class="btn-danger btn-remove btn-block">ลบ</button></div>
+      </div>`;
+    row.querySelector('.sib-name').value = s.name || '';
+    row.querySelector('.sib-pos').value = s.pos || '';
+    row.querySelector('.sib-dept').value = s.dept || '';
+    row.querySelector('.btn-remove').addEventListener('click', () => {
+      row.remove();
+      if (!siblingsBox.children.length) addSiblingRow();
+      renumberSiblings();
+      saveDraft();
+    });
+    siblingsBox.appendChild(row);
+    renumberSiblings();
+    if (focus) row.querySelector('.sib-name').focus();
+  }
+
+  function renumberSiblings() {
+    const req = ' <span class="req" aria-hidden="true">*</span>';
+    [...siblingsBox.children].forEach((row, i) => {
+      const n = i + 1;
+      row.querySelector('.att-num').textContent = n + '.';
+      [['name', `ชื่อ-นามสกุล (คนที่ ${n})${req}`],
+       ['pos',  `ตำแหน่ง${req}`],
+       ['dept', 'แผนก/ฝ่าย']].forEach(([k, text]) => {
+        const input = row.querySelector(`.sib-${k}`);
+        const label = row.querySelector(`.sib-${k}-label`);
+        input.id = `sib${k}${n}`;
+        label.htmlFor = input.id;
+        label.innerHTML = text;
+      });
+      row.querySelector('.btn-remove').setAttribute('aria-label', `ลบพี่น้องคนที่ ${n}`);
+    });
+  }
+
+  function getSiblings() {
+    return [...siblingsBox.children].map(row => ({
+      name: row.querySelector('.sib-name').value.trim(),
+      pos:  row.querySelector('.sib-pos').value.trim(),
+      dept: row.querySelector('.sib-dept').value.trim()
+    })).filter(s => s.name || s.pos || s.dept);
+  }
+
+  /* ====== สถานที่ฌาปนกิจ ====== */
+
+  function updateCremPreview() {
+    const box = $('cremSameText');
+    const place = $('prayPlace').value.trim();
+    const mapUrl = $('prayMap').value.trim();
+    box.textContent = '';
+    if (!place) {
+      const s = document.createElement('span');
+      s.className = 'empty';
+      s.textContent = 'ยังไม่ได้กรอกสถานที่ในส่วนที่ 3 (พิธีสวดอภิธรรมศพ)';
+      box.appendChild(s);
+      return;
+    }
+    box.textContent = place + (mapUrl ? `\nแผนที่: ${mapUrl}` : '');
+  }
+
+  function toggleCremPlace() {
+    const same = isCremSamePlace();
+    $('cremSamePreview').hidden = !same;
+    $('cremPlaceWrap').hidden = same;
+    $('cremPlace').required = !same;
+    if (same) {
+      setError($('cremPlace'), 'cremPlace-err', '');
+      setError($('cremMap'), 'cremMap-err', '');
+      updateCremPreview();
+    }
+  }
+
+  /* ====== ส่วนเสริมการเดินทาง (เสมียน/Admin) ====== */
+
+  function toggleTravel() {
+    const on = travelOn.checked;
+    travelBody.hidden = !on;
+    travelOn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    Object.keys(TRAVEL_REQUIRED).forEach(id => { $(id).required = on; });
+    if (!on) {
+      Object.keys(TRAVEL_REQUIRED).forEach(id => setError($(id), `${id}-err`, ''));
+      travelBody.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+      $('attendees-err').textContent = '';
+    }
+  }
+
+  function addAttendeeRow(name = '', id = '', focus = false) {
+    const row = document.createElement('div');
+    row.className = 'att-row';
+    row.innerHTML = `
+      <div class="att-num" aria-hidden="true"></div>
+      <div class="att-fields">
+        <div>
+          <label class="att-name-label"></label>
+          <input type="text" class="att-name" autocomplete="off">
+        </div>
+        <div>
+          <label class="att-id-label"></label>
+          <input type="text" class="att-id" inputmode="numeric" autocomplete="off">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button type="button" class="btn-danger btn-remove btn-block">ลบ</button>
+        </div>
+      </div>`;
+    row.querySelector('.att-name').value = name;
+    row.querySelector('.att-id').value = id;
+    row.querySelector('.btn-remove').addEventListener('click', () => {
+      row.remove();
+      if (!attendeesBox.children.length) addAttendeeRow();
+      renumberAttendees();
+      saveDraft();
+    });
+    attendeesBox.appendChild(row);
+    renumberAttendees();
+    if (focus) row.querySelector('.att-name').focus();
+  }
+
+  function renumberAttendees() {
+    [...attendeesBox.children].forEach((row, i) => {
+      const n = i + 1;
+      row.querySelector('.att-num').textContent = n + '.';
+      const nameIn = row.querySelector('.att-name');
+      const idIn = row.querySelector('.att-id');
+      nameIn.id = `attName${n}`; idIn.id = `attId${n}`;
+      const nl = row.querySelector('.att-name-label');
+      const il = row.querySelector('.att-id-label');
+      nl.htmlFor = nameIn.id; nl.textContent = `ชื่อ-นามสกุล (คนที่ ${n})`;
+      il.htmlFor = idIn.id;   il.textContent = 'รหัสพนักงาน';
+      row.querySelector('.btn-remove').setAttribute('aria-label', `ลบรายชื่อคนที่ ${n}`);
+    });
+  }
+
+  function getAttendees() {
+    return [...attendeesBox.children].map(row => ({
+      name: row.querySelector('.att-name').value.trim(),
+      id: row.querySelector('.att-id').value.trim()
+    })).filter(a => a.name || a.id);
+  }
+
+  /* ====== Validation ====== */
+
+  function setError(el, errId, msg) {
+    const err = $(errId);
+    if (err) err.textContent = msg || '';
+    if (el) {
+      el.classList.toggle('invalid', !!msg);
+      el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    }
+  }
+
+  // หา element ที่ผู้ใช้มองเห็นได้สำหรับช่องนั้น (ช่องที่ซ่อนอยู่ใต้ Drop List → ใช้ select แทน)
+  function visibleFieldFor(el) {
+    if (!el.hidden) return el;
+    return combos.find(s => s.dataset.target === el.id) || el;
+  }
+
+  function checkRequired(map, errors) {
+    for (const [id, msg] of Object.entries(map)) {
+      const el = $(id);
+      const target = visibleFieldFor(el);
+      const empty = !el.value.trim();
+      setError(target, `${id}-err`, empty ? msg : '');
+      if (empty) errors.push(target);
+    }
+  }
+
+  function checkMapUrl(id, errors) {
+    const el = $(id); const v = el.value.trim();
+    const bad = v && !/^https?:\/\/\S+$/i.test(v);
+    setError(el, `${id}-err`, bad ? 'ลิงก์ไม่ถูกต้อง ต้องขึ้นต้นด้วย https://' : '');
+    if (bad) errors.push(el);
+  }
+
+  function validate() {
+    const errors = [];
+
+    checkRequired(REQUIRED, errors);
+
+    const phone = $('empPhone');
+    if (phone.value.trim() && !/^0\d{9}$/.test(digitsOnly(phone.value))) {
+      setError(phone, 'empPhone-err', 'เบอร์โทรไม่ถูกต้อง ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0');
+      errors.push(phone);
+    }
+
+    const sib = getRadio('sibling');
+    $('sibling-err').textContent = sib ? '' : 'กรุณาเลือกว่ามีพี่น้องทำงานที่บริษัทหรือไม่';
+    if (!sib) errors.push(form.querySelector('input[name="sibling"]'));
+    if (sib === 'มี') {
+      if (!siblingsBox.children.length) addSiblingRow();
+      let msg = '';
+      const rows = [...siblingsBox.children];
+      rows.forEach(row => {
+        const n = row.querySelector('.sib-name');
+        const p = row.querySelector('.sib-pos');
+        const d = row.querySelector('.sib-dept');
+        const filled = n.value.trim() || p.value.trim() || d.value.trim();
+        const missN = filled && !n.value.trim();
+        const missP = filled && !p.value.trim();
+        n.classList.toggle('invalid', !!missN);
+        p.classList.toggle('invalid', !!missP);
+        if (missN) errors.push(n);
+        if (missP) errors.push(p);
+        if (missN || missP) msg = 'กรุณากรอกชื่อ-นามสกุล และตำแหน่งของพี่น้องให้ครบ';
+      });
+      if (!getSiblings().length) {
+        msg = 'กรุณาระบุข้อมูลพี่น้องอย่างน้อย 1 คน';
+        errors.push(rows[0].querySelector('.sib-name'));
+      }
+      $('siblings-err').textContent = msg;
+    }
+
+    const rel = getRadio('relation');
+    $('relation-err').textContent = rel ? '' : 'กรุณาเลือกความเกี่ยวข้องกับพนักงาน';
+    if (!rel) errors.push(form.querySelector('input[name="relation"]'));
+
+    checkMapUrl('prayMap', errors);
+
+    if (!isCremSamePlace()) {
+      checkRequired({ cremPlace:'กรุณากรอกสถานที่ฌาปนกิจ' }, errors);
+      checkMapUrl('cremMap', errors);
+    }
+
+    if (travelOn.checked) {
+      checkRequired(TRAVEL_REQUIRED, errors);
+      const rows = [...attendeesBox.children];
+      let attMsg = '';
+      rows.forEach(row => {
+        const n = row.querySelector('.att-name');
+        const i = row.querySelector('.att-id');
+        const missName = !n.value.trim() && i.value.trim();
+        n.classList.toggle('invalid', !!missName);
+        if (missName) { attMsg = 'กรุณากรอกชื่อให้ครบทุกแถวที่มีรหัสพนักงาน'; errors.push(n); }
+      });
+      if (!getAttendees().length) {
+        attMsg = 'กรุณาเพิ่มรายชื่อพนักงานที่ไปร่วมงานอย่างน้อย 1 คน';
+        errors.push(rows[0].querySelector('.att-name'));
+      }
+      $('attendees-err').textContent = attMsg;
+    }
+
+    if (!errors.length) return null;
+    return errors.reduce((a, b) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_PRECEDING) ? b : a);
+  }
+
+  /* ====== สร้างข้อความสรุป ====== */
+
+  function buildMessage() {
+    const v = (id) => $(id).value.trim();
+    const rel = getRadio('relation') || 'ผู้เสียชีวิต';
+    const map = (id) => v(id) ? `\nแผนที่: ${v(id)}` : '';
+
+    const siblingLines = getRadio('sibling') === 'มี'
+      ? ['พี่น้องในบริษัท: มี', ...getSiblings().map((s, i) =>
+          `   ${i + 1}. ${s.name} | ตำแหน่ง: ${s.pos}${s.dept ? ` | แผนก/ฝ่าย: ${s.dept}` : ''}`)]
+      : ['พี่น้องในบริษัท: ไม่มี'];
+
+    const prayFirstLine = v('prayPlace').split('\n')[0].trim();
+    const cremPlaceText = isCremSamePlace()
+      ? `เดียวกับพิธีสวดอภิธรรมศพ${prayFirstLine ? ` (${prayFirstLine})` : ''}`
+      : `${v('cremPlace')}${map('cremMap')}`;
+
+    const lines = [
+      `📍รายละเอียดงานศพ ${rel} พนักงานเสียชีวิต`,
+      `📍ชื่อพนักงาน: ${v('empName')}`,
+      `รหัส: ${v('empId')}`,
+      `ตำแหน่ง: ${v('empPosition')}`,
+      `แผนก: ${v('empDept')}`,
+      `ไลน์/Process: ${v('empLine')}`,
+      `เบอร์โทร: ${digitsOnly(v('empPhone'))}`,
+      ...siblingLines,
+      ``,
+      `📌ชื่อ${rel}: ${v('deceasedName')}`,
+      `เสียชีวิตวันที่: ${formatThaiDate(v('deathDate'))}`,
+      `สาเหตุการเสียชีวิต: ${v('deathCause')}`,
+      ``,
+      `📌สวดอภิธรรมศพ`,
+      `วันที่: ${formatThaiDate(v('prayDate'))} | เวลา: ${formatThaiTime(v('prayTime'))}`,
+      `สถานที่: ${v('prayPlace')}${map('prayMap')}`,
+      ``,
+      `📌ฌาปนกิจ`,
+      `วันที่: ${formatThaiDate(v('cremDate'))} | เวลา: ${formatThaiTime(v('cremTime'))}`,
+      `สถานที่: ${cremPlaceText}`
+    ];
+
+    if (travelOn.checked) {
+      const att = getAttendees()
+        .map((a, i) => `${i + 1}. ${a.name}${a.id ? ` (รหัส ${a.id})` : ''}`)
+        .join('\n');
+      lines.push(
+        ``,
+        `* กำหนดไปร่วมงานศพ วันที่ ${formatThaiDate(v('attendDate'))}`,
+        `พนักงานที่ไปร่วมงาน:`,
+        att,
+        ``,
+        `ออกเดินทาง`,
+        `วันที่: ${formatThaiDate(v('departDate'))} | เวลา: ${formatThaiTime(v('departTime'))}`,
+        `สถานที่: ${v('meetPoint')}`
+      );
+    }
+    return lines.join('\n');
+  }
+
+  /* ====== คัดลอกข้อความ (clipboard API + fallback) ====== */
+
+  async function copy(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) { /* ตกไปใช้ fallback */ }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  /* ====== Toast ====== */
+  let toastTimer;
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  /* ====== ฉบับร่าง (localStorage) ====== */
+
+  function saveDraft() {
+    try {
+      const data = {};
+      SIMPLE_FIELDS.forEach(id => data[id] = $(id).value);
+      RADIO_GROUPS.forEach(name => data[name] = getRadio(name));
+      data.travelOn = travelOn.checked;
+      data.siblings = [...siblingsBox.children].map(row => ({
+        name: row.querySelector('.sib-name').value,
+        pos:  row.querySelector('.sib-pos').value,
+        dept: row.querySelector('.sib-dept').value
+      }));
+      data.attendees = [...attendeesBox.children].map(row => ({
+        name: row.querySelector('.att-name').value,
+        id: row.querySelector('.att-id').value
+      }));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    } catch (e) { /* บางเบราว์เซอร์ (โหมดส่วนตัว) อาจบันทึกไม่ได้ */ }
+  }
+
+  function loadDraft() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch (e) {}
+    if (data) {
+      if (!data.cremPlaceMode) data.cremPlaceMode = (data.cremPlace || '').trim() ? 'other' : 'same';
+      SIMPLE_FIELDS.forEach(id => { if (data[id] !== undefined) $(id).value = data[id]; });
+      RADIO_GROUPS.forEach(name => {
+        if (!data[name]) return;
+        const r = [...form.querySelectorAll(`input[name="${name}"]`)].find(x => x.value === data[name]);
+        if (r) r.checked = true;
+      });
+      travelOn.checked = !!data.travelOn;
+      let sibs = Array.isArray(data.siblings) ? data.siblings : [];
+      if (!sibs.length && data.siblingNames) {
+        sibs = data.siblingNames.split(/\n+/).map(s => s.trim()).filter(Boolean).map(name => ({ name }));
+      }
+      sibs.forEach(s => addSiblingRow(s));
+    }
+    if (!$('meetPoint').value) $('meetPoint').value = DEFAULT_MEET_POINT;
+    if (!cremPlaceMode.value) cremPlaceMode.value = 'same';
+    if (new URLSearchParams(location.search).get('admin') === '1') travelOn.checked = true;
+
+    const list = data && Array.isArray(data.attendees) && data.attendees.length ? data.attendees : [{}];
+    list.forEach(a => addAttendeeRow(a.name || '', a.id || ''));
+    combos.forEach(syncComboFromValue);   // ตั้งค่า Drop List ให้ตรงกับฉบับร่าง
+    toggleSiblingField();
+    toggleCremPlace();
+    toggleTravel();
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  }
+
+  /* ====== Event handlers ====== */
+
+  let saveTimer;
+  form.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.classList.contains('invalid') && el.value.trim()) {
+      el.classList.remove('invalid');
+      el.setAttribute('aria-invalid', 'false');
+      const err = $(`${el.id}-err`);
+      if (err) err.textContent = '';
+    }
+    // จำค่าที่พิมพ์เองไว้ เผื่อสลับตัวเลือกไปมา
+    const combo = combos.find(s => s.dataset.target === el.id);
+    if (combo) combo.dataset.prevOther = el.value;
+    if (el.id === 'prayPlace' || el.id === 'prayMap') updateCremPreview();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDraft, 300);
+  });
+
+  form.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.classList.contains('combo')) onComboChange(t, true);
+    if (RADIO_GROUPS.includes(t.name)) {
+      $(`${t.name}-err`).textContent = '';
+      if (t.name === 'sibling') {
+        toggleSiblingField();
+        if (getRadio('sibling') === 'มี') siblingsBox.querySelector('.sib-name').focus();
+      }
+    }
+    if (t === cremPlaceMode) {
+      toggleCremPlace();
+      if (!isCremSamePlace()) $('cremPlace').focus();
+    }
+    if (t === travelOn) {
+      toggleTravel();
+      if (travelOn.checked) $('attendDate').focus();
+    }
+    saveDraft();
+  });
+
+  $('addAttendee').addEventListener('click', () => { addAttendeeRow('', '', true); saveDraft(); });
+  $('addSibling').addEventListener('click', () => { addSiblingRow({}, true); saveDraft(); });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const bad = validate();
+    if (bad) {
+      bad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => bad.focus({ preventScroll: true }), 300);
+      showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+    output.value = buildMessage();
+    resultCard.hidden = false;
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    saveDraft();
+  });
+
+  $('copyBtn').addEventListener('click', async () => {
+    const ok = await copy(output.value);
+    showToast(ok ? '✅ คัดลอกข้อความแล้ว' : 'คัดลอกไม่สำเร็จ กรุณากดค้างที่ข้อความเพื่อคัดลอก');
+  });
+
+  $('lineBtn').addEventListener('click', () => {
+    const url = 'https://line.me/R/msg/text/?' + encodeURIComponent(output.value);
+    window.open(url, '_blank', 'noopener');
+  });
+
+  $('clearBtn').addEventListener('click', () => {
+    if (!confirm('ต้องการล้างข้อมูลทั้งหมดในฟอร์มใช่หรือไม่?\nฉบับร่างที่บันทึกไว้จะถูกลบด้วย')) return;
+    form.reset();
+    $('meetPoint').value = DEFAULT_MEET_POINT;
+    attendeesBox.innerHTML = '';
+    addAttendeeRow();
+    siblingsBox.innerHTML = '';
+    combos.forEach(s => { delete s.dataset.prevOther; syncComboFromValue(s); });
+    travelOn.checked = new URLSearchParams(location.search).get('admin') === '1';
+    toggleSiblingField();
+    toggleCremPlace();
+    toggleTravel();
+    form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+    form.querySelectorAll('.error').forEach(el => el.textContent = '');
+    output.value = '';
+    resultCard.hidden = true;
+    clearDraft();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('ล้างฟอร์มเรียบร้อยแล้ว');
+  });
+
+  /* ====== เริ่มต้น ====== */
+  buildOptions();
+  loadDraft();
+})();
+</script>
+</body>
+</html>
