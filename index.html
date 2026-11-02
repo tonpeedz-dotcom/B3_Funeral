@@ -1326,29 +1326,31 @@
     hRule(ctx, 260, W - 260, 22, 'solid');
 
     // ดอกไม้มุมซ้ายบน / ขวา (ใต้ริบบิ้น)
-    drawFlower(ctx, -110, -90, 480, 1, 1);
+    drawFlower(ctx, -100, -80, 420, 1, 1);
     drawFlower(ctx, W - 135, 225, 240, -1, 1, 0.95);
 
     // ริบบิ้นดำ
     blackRibbon(ctx, 840, 40, 190);
 
     // ---- หัวการ์ด ----
-    const HX = 515;
-    drawText(ctx, 'ขอแสดง', HX, 52, 104, { weight: 400, fam: F_HEAD, align: 'center' });
-    const big = fitSize(ctx, 'ความเสียใจ', 150, 620, 500, F_HEAD, 100);
+    // หัวการ์ดอยู่ในช่องว่างระหว่างดอกไม้ซ้าย (ถึง x≈330) กับริบบิ้น (เริ่ม x≈840)
+    const HX = 585, HEAD_W = 450;
+    const s1 = fitSize(ctx, 'ขอแสดง', 78, HEAD_W, 400, F_HEAD, 50);
+    drawText(ctx, 'ขอแสดง', HX, 70, s1, { weight: 400, fam: F_HEAD, align: 'center' });
+    const big = fitSize(ctx, 'ความเสียใจ', 104, HEAD_W, 500, F_HEAD, 64);
     drawText(ctx, 'ความเสียใจ', HX, 150, big, { weight: 500, fam: F_HEAD, align: 'center' });
-    drawText(ctx, 'ต่อการสูญเสียในครั้งนี้', HX, 318, 38, { weight: 500, align: 'center' });
+    drawText(ctx, 'ต่อการสูญเสียในครั้งนี้', HX, 290, 34, { weight: 500, align: 'center' });
     // เส้นคั่นมีลายกลาง
     ctx.save();
     ctx.strokeStyle = '#8a8a8a'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(HX - 210, 395); ctx.lineTo(HX - 48, 395); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(HX + 48, 395); ctx.lineTo(HX + 210, 395); ctx.stroke();
-    spiral(ctx, HX - 24, 395, 12, 1.3, -1, 0);
-    spiral(ctx, HX + 24, 395, 12, 1.3, 1, Math.PI);
+    ctx.beginPath(); ctx.moveTo(HX - 190, 365); ctx.lineTo(HX - 48, 365); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(HX + 48, 365); ctx.lineTo(HX + 190, 365); ctx.stroke();
+    spiral(ctx, HX - 24, 365, 12, 1.3, -1, 0);
+    spiral(ctx, HX + 24, 365, 12, 1.3, 1, Math.PI);
     ctx.restore();
 
     // ---- ชื่อพนักงาน / ชื่อผู้เสียชีวิต (2 คอลัมน์) ----
-    let y = 440;
+    let y = 415;
     const C1 = L, C2 = 565, colW = 440;
     pill(ctx, 'ชื่อพนักงาน', C1, y);
     pill(ctx, `ชื่อ${d.rel}`, C2, y);
@@ -1359,20 +1361,12 @@
     s = fitSize(ctx, d.deceased, 44, colW, 600, F_BODY, 30);
     drawText(ctx, d.deceased, C2, nameY, s, { weight: 600 });
 
-    // ซ้าย: แผนก / ตำแหน่ง
-    let yl = nameY + 72;
-    [['แผนก : ', d.dept], ['ตำแหน่ง : ', d.pos]].forEach(([k, val]) => {
-      setFont(ctx, 30, 400, F_BODY);
-      wrapText(ctx, k + val, colW).forEach(line => {
-        drawText(ctx, line, C1, yl, 30, { color: SUB }); yl += 42;
-      });
-    });
     // ขวา: วันที่เสียชีวิต
     iconCalendar(ctx, C2, nameY + 74, 34);
     const dText = `เสียชีวิตวันที่ ${d.deathDate}`;
     s = fitSize(ctx, dText, 32, colW - 50, 400, F_BODY, 24);
     drawText(ctx, dText, C2 + 50, nameY + 70, s, { color: SUB });
-    y = Math.max(yl, nameY + 120) + 28;
+    y = nameY + 130;
 
     hRule(ctx, 50, W - 50, y, 'double');
     y += 26;
