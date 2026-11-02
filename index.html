@@ -164,7 +164,7 @@
 
   /* ===== รูปการ์ด JPEG ===== */
   #cardWrap{margin-top:16px; padding-top:16px; border-top:1px solid var(--border)}
-  #cardImg{display:block; width:100%; max-width:540px; margin:0 auto 12px;
+  #cardImg{display:block; width:100%; max-width:540px; height:auto; margin:0 auto 12px;
            border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.25)}
 
   /* ===== Toast แจ้งเตือน ===== */
@@ -650,7 +650,7 @@
     box.textContent = show ? `📅 จำนวนทั้งหมด ${n} คืน ตั้งแต่วันที่ ${formatThaiRange(start, n)}` : '';
   }
 
-  // ตัด "(BP)" ท้ายชื่อแผนกออก (ใช้ในข้อความ LINE และรูปการ์ด)
+  // ตัด "(BP)" ท้ายชื่อแผนกออก (ใช้ในข้อความ LINE)
   const stripBP = (s) => (s || '').replace(/\s*\(BP\)\s*$/i, '').trim();
   const formatThaiTime = (t) => t ? `${t.replace(':', '.')} น.` : '-';
   const digitsOnly = (s) => (s || '').replace(/\D/g, '');
@@ -1006,11 +1006,13 @@
 
   /* =====================================================================
      รูปการ์ดกำหนดการ (JPEG) — วาดด้วย <canvas> ในเครื่อง ไม่ส่งข้อมูลออกไป
-     สไตล์: ขาว-ดำ กรอบลายเส้นมุม 4 ด้าน ตัวอักษรลายมือ (Charm) เลขไทย
+     - ขนาดคงที่ 1080 x 1512 px (สัดส่วน 5:7 แบบการ์ดตัวอย่าง)
+     - ถ้าเนื้อหายาว ระบบย่อตัวอักษรอัตโนมัติให้พอดีกรอบ
+     - จัดกึ่งกลางเองด้วยการวัดความกว้าง (ไม่พึ่ง textAlign ซึ่งบางเบราว์เซอร์ในแอปทำงานผิด)
      ===================================================================== */
 
-  const CARD_W = 1080;                 // ความกว้างรูป (px)
-  const CARD_MIN_H = 1500;             // ความสูงขั้นต่ำ (สัดส่วนประมาณ 5:7)
+  const CARD_W = 1080;
+  const CARD_H = 1512;
   const CARD_FONT = '"Charm", "Sarabun", serif';
   const CARD_INK = '#111111';
   const CARD_SUB = '#333333';
@@ -1044,7 +1046,7 @@
     return lines.length ? lines : [''];
   }
 
-  // รวบรวมเนื้อหาบนการ์ดจากฟอร์ม (รายการบรรทัด/ตัวคั่น)
+  // เนื้อหาบนการ์ด (ไม่มีตำแหน่ง / แผนก / ไลน์)
   function cardItems() {
     const v = (id) => $(id).value.trim();
     const rel = getRadio('relation') || '';
@@ -1054,40 +1056,37 @@
     const items = [];
     const T = (text, size, opt = {}) => items.push({ type: 'text', text, size, ...opt });
 
-    T('กำหนดการสวดพระอภิธรรมและฌาปนกิจศพ', 44, { gap: 0, color: CARD_SUB });
-    T(v('deceasedName'), 84, { bold: true, gap: 26, fit: true });
-    T(`${rel}ของ ${v('empName')}`, 46, { gap: 8 });
-    T(thNum(`${v('empPosition')} • ${stripBP(v('empDept'))} • ไลน์ ${v('empLine')}`), 30,
-      { gap: 4, color: CARD_SUB, font: '"Sarabun", sans-serif' });
-    T(`ณ ${oneLine(v('prayPlace'))}`, 48, { gap: 20 });
-    items.push({ type: 'divider', gap: 26 });
+    T('กำหนดการสวดพระอภิธรรมและฌาปนกิจศพ', 46, { gap: 0, color: CARD_SUB });
+    T(v('deceasedName'), 86, { bold: true, gap: 24, fit: true });
+    T(`${rel}ของ ${v('empName')}`, 46, { gap: 6 });
+    T(`ณ ${oneLine(v('prayPlace'))}`, 50, { gap: 14 });
+    items.push({ type: 'divider', gap: 22 });
 
     if (nights <= 4) {
       // แสดงทีละคืน
       for (let i = 0; i < nights; i++) {
-        T(cardDate(start, i), 52, { gap: i ? 22 : 10 });
-        T(`เวลา ${prayT} สวดพระอภิธรรม${nights > 1 ? ` (คืนที่ ${thNum(i + 1)})` : ''}`, 38, { gap: 2, color: CARD_SUB });
+        T(cardDate(start, i), 54, { gap: i ? 18 : 6 });
+        T(`เวลา ${prayT} สวดพระอภิธรรม${nights > 1 ? ` (คืนที่ ${thNum(i + 1)})` : ''}`, 40, { gap: 0, color: CARD_SUB });
       }
     } else {
       // หลายคืน: แสดงเป็นช่วงวันที่
-      T(thNum(`วันที่ ${formatThaiRange(start, nights).replace(/(\d{4})$/, 'พ.ศ. $1')}`), 50, { gap: 10 });
-      T(`ทุกคืน เวลา ${prayT} สวดพระอภิธรรม (${thNum(nights)} คืน)`, 38, { gap: 2, color: CARD_SUB });
+      T(thNum(`วันที่ ${formatThaiRange(start, nights).replace(/(\d{4})$/, 'พ.ศ. $1')}`), 52, { gap: 6 });
+      T(`ทุกคืน เวลา ${prayT} สวดพระอภิธรรม (${thNum(nights)} คืน)`, 40, { gap: 0, color: CARD_SUB });
     }
 
     // วันฌาปนกิจ
-    T(cardDate(v('cremDate')), 52, { gap: 22 });
-    T(`เวลา ${cardTime(v('cremTime'))} พิธีฌาปนกิจ`, 38, { gap: 2, color: CARD_SUB });
-    if (!isCremSamePlace() && v('cremPlace')) T(`ณ ${oneLine(v('cremPlace'))}`, 38, { gap: 2, color: CARD_SUB });
+    T(cardDate(v('cremDate')), 54, { gap: 18 });
+    T(`เวลา ${cardTime(v('cremTime'))} พิธีฌาปนกิจ`, 40, { gap: 0, color: CARD_SUB });
+    if (!isCremSamePlace() && v('cremPlace')) T(`ณ ${oneLine(v('cremPlace'))}`, 40, { gap: 0, color: CARD_SUB });
 
-    items.push({ type: 'divider', gap: 26 });
-    T('ขอแสดงความเสียใจและร่วมไว้อาลัยต่อการจากไป', 42, { gap: 12 });
-    T('พนักงาน PRODUCTION 3 (BP)', 40, { gap: 6 });
+    items.push({ type: 'divider', gap: 22 });
+    T('ขอแสดงความเสียใจและร่วมไว้อาลัยต่อการจากไป', 42, { gap: 10 });
+    T('พนักงาน PRODUCTION 3 (BP)', 40, { gap: 4 });
     return items;
   }
 
   // ---- ลายเส้นตกแต่ง ----
 
-  // เกลียวก้นหอย (dir = 1 หมุนตามเข็ม, -1 ทวนเข็ม)
   function spiral(ctx, cx, cy, r, turns, dir = 1, startAng = 0) {
     const steps = Math.round(60 * turns);
     ctx.beginPath();
@@ -1101,7 +1100,6 @@
     ctx.stroke();
   }
 
-  // ใบไม้ (ทึบ) ที่ตำแหน่ง x,y ยาว len หมุน ang
   function leaf(ctx, x, y, len, ang) {
     ctx.save();
     ctx.translate(x, y); ctx.rotate(ang);
@@ -1117,7 +1115,6 @@
   function cornerOrnament(ctx, x, y, sx, sy) {
     ctx.save();
     ctx.translate(x, y); ctx.scale(sx, sy);
-    // พื้นขาวรองใต้ลาย เพื่อให้เส้นกรอบ "เข้าไปใต้" ลาย
     ctx.fillStyle = '#fff';
     ctx.beginPath(); ctx.arc(62, 62, 60, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = CARD_INK; ctx.strokeStyle = CARD_INK;
@@ -1125,16 +1122,13 @@
 
     ctx.lineWidth = 5;
     spiral(ctx, 62, 62, 44, 1.6, 1, -Math.PI / 2);
-    // แขนแนวนอน
     ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(62, 18);
     ctx.bezierCurveTo(115, -2, 160, 48, 215, 26); ctx.stroke();
     spiral(ctx, 222, 18, 13, 1.2, -1, Math.PI);
-    // แขนแนวตั้ง
     ctx.beginPath(); ctx.moveTo(18, 62);
     ctx.bezierCurveTo(-2, 115, 48, 160, 26, 215); ctx.stroke();
     spiral(ctx, 18, 222, 13, 1.2, 1, -Math.PI / 2);
-    // โค้งด้านใน
     ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(98, 98);
     ctx.bezierCurveTo(150, 92, 168, 130, 140, 150);
@@ -1142,13 +1136,11 @@
     ctx.beginPath(); ctx.moveTo(98, 98);
     ctx.bezierCurveTo(92, 150, 130, 168, 150, 140);
     ctx.stroke();
-    // ใบไม้
     leaf(ctx, 120, 34, 34, -0.35);
     leaf(ctx, 34, 120, 34, Math.PI / 2 + 0.35);
     leaf(ctx, 104, 104, 40, Math.PI / 4);
     leaf(ctx, 160, 34, 22, 0.5);
     leaf(ctx, 34, 160, 22, Math.PI / 2 - 0.5);
-    // จุดประดับ
     [[175, 60], [60, 175], [150, 150]].forEach(([px, py]) => {
       ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2); ctx.fill();
     });
@@ -1170,14 +1162,13 @@
       leaf(ctx, s * 70, 30, 26, s > 0 ? 0.3 : Math.PI - 0.3);
       ctx.beginPath(); ctx.arc(s * 118, 18, 4, 0, Math.PI * 2); ctx.fill();
     });
-    // เพชรกลาง
     ctx.beginPath();
     ctx.moveTo(0, 2); ctx.lineTo(10, 18); ctx.lineTo(0, 34); ctx.lineTo(-10, 18); ctx.closePath();
     ctx.fill();
     ctx.restore();
   }
 
-  // เส้นคั่นกลางหน้า (เส้น + ลายเกลียวคู่ตรงกลาง)
+  // เส้นคั่นกลางหน้า
   function divider(ctx, cx, y) {
     ctx.save();
     ctx.strokeStyle = CARD_INK; ctx.fillStyle = CARD_INK;
@@ -1192,42 +1183,53 @@
     ctx.restore();
   }
 
-  // วาดการ์ดทั้งใบ แล้วคืนค่า canvas
-  function drawCard() {
-    const W = CARD_W;
-    const PAD_X = 150;                  // ระยะขอบซ้าย-ขวาของเนื้อหา
-    const maxW = W - PAD_X * 2;
-    const TOP = 250, BOTTOM = 250;      // พื้นที่ลายมุมบน/ล่าง
-    const LH = 1.42;                    // ระยะห่างบรรทัด
-
-    const items = cardItems();
-
-    // รอบที่ 1: วัดความสูงทั้งหมด
-    const mctx = document.createElement('canvas').getContext('2d');
+  // จัดวางข้อความด้วยขนาดตัวอักษร x scale คืนค่า {items, total}
+  function layoutItems(ctx, items, scale, maxW, LH) {
     let total = 0;
     items.forEach(it => {
-      total += it.gap || 0;
-      if (it.type === 'divider') { it.h = 40; total += it.h; return; }
+      it.gapS = (it.gap || 0) * scale;
+      total += it.gapS;
+      if (it.type === 'divider') { it.h = 40 * scale; total += it.h; return; }
       const fam = it.font || CARD_FONT;
-      let size = it.size;
-      mctx.font = `${it.bold ? 700 : 400} ${size}px ${fam}`;
+      const weight = it.bold ? 700 : 400;
+      let size = Math.round(it.size * scale);
+      ctx.font = `${weight} ${size}px ${fam}`;
       if (it.fit) {
-        while (mctx.measureText(it.text).width > maxW && size > 54) {
-          size -= 4; mctx.font = `${it.bold ? 700 : 400} ${size}px ${fam}`;
+        // ชื่อผู้เสียชีวิต: ย่อให้อยู่บรรทัดเดียวถ้าทำได้
+        while (ctx.measureText(it.text).width > maxW && size > 40) {
+          size -= 2; ctx.font = `${weight} ${size}px ${fam}`;
         }
       }
-      it.fontStr = mctx.font; it.drawSize = size;
-      it.lines = wrapText(mctx, it.text, maxW);
+      it.fontStr = ctx.font; it.drawSize = size;
+      it.lines = wrapText(ctx, it.text, maxW);
       it.h = it.lines.length * size * LH;
       total += it.h;
     });
+    return total;
+  }
 
-    const H = Math.max(CARD_MIN_H, Math.ceil(TOP + total + BOTTOM));
+  // วาดการ์ดทั้งใบ แล้วคืนค่า canvas
+  function drawCard() {
+    const W = CARD_W, H = CARD_H;
+    const PAD_X = 140;                  // ระยะขอบซ้าย-ขวาของเนื้อหา
+    const maxW = W - PAD_X * 2;
+    const TOP = 215, BOTTOM = 215;      // พื้นที่ลายมุมบน/ล่าง
+    const avail = H - TOP - BOTTOM;
+    const LH = 1.38;                    // ระยะห่างบรรทัด
+
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // พื้นหลัง: กรอบดำ + พื้นขาว
+    // ย่อขนาดอัตโนมัติจนเนื้อหาพอดีกรอบ
+    const items = cardItems();
+    let scale = 1, total = layoutItems(ctx, items, scale, maxW, LH);
+    while (total > avail && scale > 0.5) {
+      scale -= 0.04;
+      total = layoutItems(ctx, items, scale, maxW, LH);
+    }
+
+    // พื้นหลัง: กรอบดำ + พื้นขาวมุมมน
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#fff';
     const r = 30, inset = 24;
@@ -1254,17 +1256,19 @@
     centerOrnament(ctx, W / 2, 48, 1);
     centerOrnament(ctx, W / 2, H - 48, -1);
 
-    // รอบที่ 2: วาดข้อความ (จัดกึ่งกลางแนวตั้งในพื้นที่เนื้อหา)
-    let y = TOP + Math.max(0, (H - TOP - BOTTOM - total) / 2);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    // วาดข้อความ: จัดกึ่งกลางแนวตั้งในพื้นที่เนื้อหา และกึ่งกลางแนวนอนด้วยการวัดความกว้างเอง
+    let y = TOP + Math.max(0, (avail - total) / 2);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
     items.forEach(it => {
-      y += it.gap || 0;
+      y += it.gapS;
       if (it.type === 'divider') { divider(ctx, W / 2, y + it.h / 2); y += it.h; return; }
       ctx.font = it.fontStr;
       ctx.fillStyle = it.color || CARD_INK;
       it.lines.forEach(line => {
-        ctx.fillText(line, W / 2, y);
+        const w = ctx.measureText(line).width;
+        // baseline อยู่ประมาณ 82% ของความสูงตัวอักษร (เผื่อสระบน/ล่างภาษาไทย)
+        ctx.fillText(line, (W - w) / 2, y + it.drawSize * 1.0);
         y += it.drawSize * LH;
       });
     });
@@ -1281,7 +1285,7 @@
     const btn = $('cardBtn');
     btn.disabled = true;
     try {
-      // รอโหลดฟอนต์ Charm ก่อนวาด (ถ้าออฟไลน์จะใช้ฟอนต์สำรอง)
+      // รอโหลดฟอนต์ก่อนวาด (ถ้าออฟไลน์จะใช้ฟอนต์สำรอง)
       if (document.fonts && document.fonts.load) {
         await Promise.race([
           Promise.all([document.fonts.load('400 48px "Charm"'), document.fonts.load('700 48px "Charm"'),
