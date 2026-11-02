@@ -102,7 +102,7 @@
     .sib-fields .full{grid-column:1 / -1}
   }
 
-  /* ===== กล่องแสดงสถานที่ (กรณีใช้สถานที่เดียวกับสวดอภิธรรม) ===== */
+  /* ===== กล่องแสดงสถานที่ / ช่วงวันที่ ===== */
   .preview{
     background:var(--preview-bg); border:1px solid var(--border); border-radius:10px;
     padding:10px 12px; white-space:pre-wrap; margin-bottom:14px;
@@ -293,15 +293,23 @@
       <legend>3) พิธีสวดอภิธรรมศพ</legend>
       <div class="row2">
         <div class="field">
-          <label for="prayDate">วันที่ <span class="req" aria-hidden="true">*</span></label>
+          <label for="prayNights">จำนวนคืน <span class="req" aria-hidden="true">*</span></label>
+          <input id="prayNights" name="prayNights" type="number" inputmode="numeric" min="1" max="30" step="1"
+                 placeholder="เช่น 3" required aria-describedby="prayNights-err">
+          <div class="error" id="prayNights-err" role="alert"></div>
+        </div>
+        <div class="field">
+          <label for="prayDate">วันที่เริ่มสวด (คืนแรก) <span class="req" aria-hidden="true">*</span></label>
           <input id="prayDate" name="prayDate" type="date" required aria-describedby="prayDate-err">
           <div class="error" id="prayDate-err" role="alert"></div>
         </div>
-        <div class="field">
-          <label for="prayTime">เวลา <span class="req" aria-hidden="true">*</span></label>
-          <input id="prayTime" name="prayTime" type="time" required aria-describedby="prayTime-err">
-          <div class="error" id="prayTime-err" role="alert"></div>
-        </div>
+      </div>
+      <!-- แสดงช่วงวันที่ที่คำนวณได้ ให้พนักงานตรวจสอบ -->
+      <div class="preview" id="prayRangePreview" aria-live="polite" hidden></div>
+      <div class="field">
+        <label for="prayTime">เวลา <span class="req" aria-hidden="true">*</span></label>
+        <input id="prayTime" name="prayTime" type="time" required aria-describedby="prayTime-err">
+        <div class="error" id="prayTime-err" role="alert"></div>
       </div>
       <div class="field">
         <label for="prayPlace">สถานที่ <span class="req" aria-hidden="true">*</span></label>
@@ -512,8 +520,8 @@
     empDept:'กรุณาเลือกแผนก', empLine:'กรุณาเลือกไลน์ / Process', empPosition:'กรุณาเลือกตำแหน่ง',
     deceasedName:'กรุณากรอกชื่อ-นามสกุลผู้เสียชีวิต', deathDate:'กรุณาเลือกวันที่เสียชีวิต',
     deathCause:'กรุณากรอกสาเหตุการเสียชีวิต',
-    prayDate:'กรุณาเลือกวันที่สวดอภิธรรม', prayTime:'กรุณาเลือกเวลาสวดอภิธรรม',
-    prayPlace:'กรุณากรอกสถานที่สวดอภิธรรม',
+    prayNights:'กรุณากรอกจำนวนคืน', prayDate:'กรุณาเลือกวันที่เริ่มสวด',
+    prayTime:'กรุณาเลือกเวลาสวดอภิธรรม', prayPlace:'กรุณากรอกสถานที่สวดอภิธรรม',
     cremDate:'กรุณาเลือกวันที่ฌาปนกิจ', cremTime:'กรุณาเลือกเวลาฌาปนกิจ'
   };
   const TRAVEL_REQUIRED = {
@@ -543,7 +551,6 @@
      - <input> ปลายทาง (data-target) เก็บค่าจริง ใช้กับ validate / ฉบับร่าง / ข้อความสรุป
      ===================================================================== */
 
-  // สร้างตัวเลือกใน select ทุกตัว + datalist สำหรับช่องพี่น้อง
   function buildOptions() {
     combos.forEach(sel => {
       const list = OPTION_SETS[sel.dataset.list] || [];
@@ -562,7 +569,6 @@
     });
   }
 
-  // เมื่อเลือกใน select → อัปเดตค่าในช่องปลายทาง
   function onComboChange(sel, focus) {
     const input = $(sel.dataset.target);
     const isOther = sel.value === OTHER;
@@ -575,7 +581,6 @@
     if (isOther && focus) input.focus();
   }
 
-  // ตั้งค่า select ให้ตรงกับค่าที่บันทึกไว้ (ใช้ตอนโหลดฉบับร่าง / ล้างฟอร์ม)
   function syncComboFromValue(sel) {
     const input = $(sel.dataset.target);
     const v = input.value.trim();
@@ -594,8 +599,53 @@
     const dt = new Date(y, m - 1, d);
     return `${THAI_DAYS[dt.getDay()]}ที่ ${d} ${THAI_MONTHS[m - 1]} ${y + 543}`;
   }
+
+  // ช่วงวันที่สวดอภิธรรม: วันเริ่ม ถึง วันเริ่ม + (จำนวนคืน - 1)
+  // ตัวอย่าง: "2-4 พฤศจิกายน 2569" / "30 พฤศจิกายน - 2 ธันวาคม 2569"
+  //          "30 ธันวาคม 2569 - 1 มกราคม 2570" / 1 คืน: "2 พฤศจิกายน 2569"
+  function formatThaiRange(iso, nights) {
+    if (!iso) return '-';
+    const [y, m, d] = iso.split('-').map(Number);
+    const s = new Date(y, m - 1, d);
+    const e = new Date(y, m - 1, d + Math.max(1, nights) - 1);
+    const D = (x) => x.getDate();
+    const M = (x) => THAI_MONTHS[x.getMonth()];
+    const Y = (x) => x.getFullYear() + 543;
+    if (nights <= 1) return `${D(s)} ${M(s)} ${Y(s)}`;
+    if (s.getFullYear() !== e.getFullYear()) return `${D(s)} ${M(s)} ${Y(s)} - ${D(e)} ${M(e)} ${Y(e)}`;
+    if (s.getMonth() !== e.getMonth()) return `${D(s)} ${M(s)} - ${D(e)} ${M(e)} ${Y(e)}`;
+    return `${D(s)}-${D(e)} ${M(s)} ${Y(s)}`;
+  }
+
+  // จำนวนคืนที่ถูกต้อง (1–30) หรือ 0 ถ้าไม่ถูกต้อง
+  function getNights() {
+    const v = $('prayNights').value.trim();
+    const n = parseInt(v, 10);
+    return /^\d+$/.test(v) && n >= 1 && n <= 30 ? n : 0;
+  }
+
+  // ข้อความ "จำนวนทั้งหมด X คืน ตั้งแต่วันที่ ..."
+  function nightsText() {
+    const n = getNights();
+    const start = $('prayDate').value;
+    if (!n || !start) return '';
+    return n > 1
+      ? `จำนวนทั้งหมด ${n} คืน ตั้งแต่วันที่ ${formatThaiRange(start, n)}`
+      : `จำนวนทั้งหมด 1 คืน วันที่ ${formatThaiRange(start, 1)}`;
+  }
+
+  // แสดงช่วงวันที่ในฟอร์มให้พนักงานตรวจสอบ
+  function updatePrayRange() {
+    const box = $('prayRangePreview');
+    const t = nightsText();
+    box.hidden = !t;
+    box.textContent = t ? `📅 ${t}` : '';
+  }
+
   const formatThaiTime = (t) => t ? `${t.replace(':', '.')} น.` : '-';
   const digitsOnly = (s) => (s || '').replace(/\D/g, '');
+  // รวมหลายบรรทัดให้เป็นบรรทัดเดียว (สำหรับสถานที่ในข้อความสรุป)
+  const oneLine = (s) => (s || '').split(/\s*\n\s*/).filter(Boolean).join(' ');
   const getRadio = (name) => {
     const r = form.querySelector(`input[name="${name}"]:checked`);
     return r ? r.value : '';
@@ -841,6 +891,13 @@
     $('relation-err').textContent = rel ? '' : 'กรุณาเลือกความเกี่ยวข้องกับพนักงาน';
     if (!rel) errors.push(form.querySelector('input[name="relation"]'));
 
+    // จำนวนคืน: ตัวเลข 1–30
+    const nightsEl = $('prayNights');
+    if (nightsEl.value.trim() && !getNights()) {
+      setError(nightsEl, 'prayNights-err', 'กรุณากรอกจำนวนคืนเป็นตัวเลข 1–30');
+      errors.push(nightsEl);
+    }
+
     checkMapUrl('prayMap', errors);
 
     if (!isCremSamePlace()) {
@@ -876,40 +933,46 @@
   function buildMessage() {
     const v = (id) => $(id).value.trim();
     const rel = getRadio('relation') || 'ผู้เสียชีวิต';
-    const map = (id) => v(id) ? `\nแผนที่: ${v(id)}` : '';
 
     const siblingLines = getRadio('sibling') === 'มี'
       ? ['พี่น้องในบริษัท: มี', ...getSiblings().map((s, i) =>
           `   ${i + 1}. ${s.name} | ตำแหน่ง: ${s.pos}${s.dept ? ` | แผนก/ฝ่าย: ${s.dept}` : ''}`)]
       : ['พี่น้องในบริษัท: ไม่มี'];
 
-    const prayFirstLine = v('prayPlace').split('\n')[0].trim();
+    // สถานที่ฌาปนกิจ: ถ้าเดียวกัน แสดง "เดียวกับพิธีสวดอภิธรรมศพ (ที่อยู่)"
+    const prayPlace = oneLine(v('prayPlace'));
     const cremPlaceText = isCremSamePlace()
-      ? `เดียวกับพิธีสวดอภิธรรมศพ${prayFirstLine ? ` (${prayFirstLine})` : ''}`
-      : `${v('cremPlace')}${map('cremMap')}`;
+      ? `เดียวกับพิธีสวดอภิธรรมศพ${prayPlace ? ` (${prayPlace})` : ''}`
+      : oneLine(v('cremPlace'));
 
     const lines = [
-      `📍รายละเอียดงานศพ ${rel} พนักงานเสียชีวิต`,
+      `🧑‍🤝‍🧑รายละเอียดงานศพ ${rel} พนักงานเสียชีวิต`,
       `📍ชื่อพนักงาน: ${v('empName')}`,
       `รหัส: ${v('empId')}`,
       `ตำแหน่ง: ${v('empPosition')}`,
       `แผนก: ${v('empDept')}`,
-      `ไลน์/Process: ${v('empLine')}`,
+      `Line: ${v('empLine')}`,
       `เบอร์โทร: ${digitsOnly(v('empPhone'))}`,
       ...siblingLines,
       ``,
-      `📌ชื่อ${rel}: ${v('deceasedName')}`,
+      `🪦ชื่อ${rel}: ${v('deceasedName')}`,
       `เสียชีวิตวันที่: ${formatThaiDate(v('deathDate'))}`,
       `สาเหตุการเสียชีวิต: ${v('deathCause')}`,
       ``,
-      `📌สวดอภิธรรมศพ`,
-      `วันที่: ${formatThaiDate(v('prayDate'))} | เวลา: ${formatThaiTime(v('prayTime'))}`,
-      `สถานที่: ${v('prayPlace')}${map('prayMap')}`,
+      `🔵สวดอภิธรรมศพ`,
+      nightsText(),
+      `วันที่: ${formatThaiDate(v('prayDate'))}`,
+      `เวลา: ${formatThaiTime(v('prayTime'))}`,
+      `สถานที่: ${prayPlace}`,
+      `แผนที่: ${v('prayMap')}`,
       ``,
-      `📌ฌาปนกิจ`,
-      `วันที่: ${formatThaiDate(v('cremDate'))} | เวลา: ${formatThaiTime(v('cremTime'))}`,
+      `🟢ฌาปนกิจ`,
+      `วันที่: ${formatThaiDate(v('cremDate'))}`,
+      `เวลา: ${formatThaiTime(v('cremTime'))}`,
       `สถานที่: ${cremPlaceText}`
     ];
+    // ระบุสถานที่ใหม่ → แสดงแผนที่ของฌาปนกิจด้วย
+    if (!isCremSamePlace()) lines.push(`แผนที่: ${v('cremMap')}`);
 
     if (travelOn.checked) {
       const att = getAttendees()
@@ -922,7 +985,8 @@
         att,
         ``,
         `ออกเดินทาง`,
-        `วันที่: ${formatThaiDate(v('departDate'))} | เวลา: ${formatThaiTime(v('departTime'))}`,
+        `วันที่: ${formatThaiDate(v('departDate'))}`,
+        `เวลา: ${formatThaiTime(v('departTime'))}`,
         `สถานที่: ${v('meetPoint')}`
       );
     }
@@ -1005,10 +1069,11 @@
 
     const list = data && Array.isArray(data.attendees) && data.attendees.length ? data.attendees : [{}];
     list.forEach(a => addAttendeeRow(a.name || '', a.id || ''));
-    combos.forEach(syncComboFromValue);   // ตั้งค่า Drop List ให้ตรงกับฉบับร่าง
+    combos.forEach(syncComboFromValue);
     toggleSiblingField();
     toggleCremPlace();
     toggleTravel();
+    updatePrayRange();
   }
 
   function clearDraft() {
@@ -1026,10 +1091,10 @@
       const err = $(`${el.id}-err`);
       if (err) err.textContent = '';
     }
-    // จำค่าที่พิมพ์เองไว้ เผื่อสลับตัวเลือกไปมา
     const combo = combos.find(s => s.dataset.target === el.id);
     if (combo) combo.dataset.prevOther = el.value;
     if (el.id === 'prayPlace' || el.id === 'prayMap') updateCremPreview();
+    if (el.id === 'prayNights' || el.id === 'prayDate') updatePrayRange();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveDraft, 300);
   });
@@ -1052,6 +1117,7 @@
       toggleTravel();
       if (travelOn.checked) $('attendDate').focus();
     }
+    if (t.id === 'prayNights' || t.id === 'prayDate') updatePrayRange();
     saveDraft();
   });
 
@@ -1095,6 +1161,7 @@
     toggleSiblingField();
     toggleCremPlace();
     toggleTravel();
+    updatePrayRange();
     form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
     form.querySelectorAll('.error').forEach(el => el.textContent = '');
     output.value = '';
