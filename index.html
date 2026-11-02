@@ -6,10 +6,10 @@
 <meta name="color-scheme" content="light dark">
 <title>แจ้งรายละเอียดงานศพ บุคคลในครอบครัวของพนักงาน</title>
 <!-- ฟอนต์ไทยจาก Google Fonts (CDN เดียวที่ใช้)
-     Sarabun = ฟอร์ม / Charm = ฟอนต์ลายมือบนรูปการ์ด -->
+     Sarabun = TH Sarabun New เวอร์ชัน Google Fonts ใช้ทั้งฟอร์มและรูปการ์ด -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Charm:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* ===== ตัวแปรสี (โหมดสว่าง) ===== */
   :root{
@@ -1013,7 +1013,7 @@
 
   const CARD_W = 1080;
   const CARD_H = 1512;
-  const CARD_FONT = '"Charm", "Sarabun", serif';
+  const CARD_FONT = '"Sarabun", "TH Sarabun New", "TH SarabunPSK", sans-serif';
   const CARD_INK = '#111111';
   const CARD_SUB = '#333333';
 
@@ -1080,8 +1080,7 @@
     if (!isCremSamePlace() && v('cremPlace')) T(`ณ ${oneLine(v('cremPlace'))}`, 40, { gap: 0, color: CARD_SUB });
 
     items.push({ type: 'divider', gap: 22 });
-    T('ขอแสดงความเสียใจและร่วมไว้อาลัยต่อการจากไป', 42, { gap: 10 });
-    T('พนักงาน PRODUCTION 3 (BP)', 40, { gap: 4 });
+    T('ขอแสดงความเสียใจและร่วมอาลัยต่อการจากไปของครอบครัวพนักงาน', 40, { gap: 10 });
     return items;
   }
 
@@ -1288,8 +1287,7 @@
       // รอโหลดฟอนต์ก่อนวาด (ถ้าออฟไลน์จะใช้ฟอนต์สำรอง)
       if (document.fonts && document.fonts.load) {
         await Promise.race([
-          Promise.all([document.fonts.load('400 48px "Charm"'), document.fonts.load('700 48px "Charm"'),
-                       document.fonts.load('400 30px "Sarabun"')]),
+          Promise.all([document.fonts.load('400 48px "Sarabun"'), document.fonts.load('700 48px "Sarabun"')]),
           new Promise(r => setTimeout(r, 4000))
         ]);
       }
