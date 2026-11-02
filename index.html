@@ -624,23 +624,19 @@
     return /^\d+$/.test(v) && n >= 1 && n <= 30 ? n : 0;
   }
 
-  // ข้อความ "จำนวนทั้งหมด X คืน ตั้งแต่วันที่ ..."
-  function nightsText() {
-    const n = getNights();
-    const start = $('prayDate').value;
-    if (!n || !start) return '';
-    return n > 1
-      ? `จำนวนทั้งหมด ${n} คืน ตั้งแต่วันที่ ${formatThaiRange(start, n)}`
-      : `จำนวนทั้งหมด 1 คืน วันที่ ${formatThaiRange(start, 1)}`;
-  }
-
   // แสดงช่วงวันที่ในฟอร์มให้พนักงานตรวจสอบ
   function updatePrayRange() {
     const box = $('prayRangePreview');
-    const t = nightsText();
-    box.hidden = !t;
-    box.textContent = t ? `📅 ${t}` : '';
+    const n = getNights();
+    const start = $('prayDate').value;
+    const show = n && start;
+    box.hidden = !show;
+    box.textContent = show ? `📅 จำนวนทั้งหมด ${n} คืน ตั้งแต่วันที่ ${formatThaiRange(start, n)}` : '';
   }
+
+  // ตัด "(BP)" ท้ายชื่อแผนกออก (ใช้เฉพาะในข้อความ LINE)
+  // เช่น "ASSEMBLY PRODUCTION NO.1 (BP)" -> "ASSEMBLY PRODUCTION NO.1"
+  const stripBP = (s) => (s || '').replace(/\s*\(BP\)\s*$/i, '').trim();
 
   const formatThaiTime = (t) => t ? `${t.replace(':', '.')} น.` : '-';
   const digitsOnly = (s) => (s || '').replace(/\D/g, '');
@@ -945,13 +941,18 @@
       ? `เดียวกับพิธีสวดอภิธรรมศพ${prayPlace ? ` (${prayPlace})` : ''}`
       : oneLine(v('cremPlace'));
 
+    // จำนวนคืน + ช่วงวันที่
+    const nights = getNights() || 1;
+    const prayStart = v('prayDate');
+
+    // รูปแบบข้อความ (เว้นวรรค/เว้นบรรทัดตามแบบที่กำหนด)
     const lines = [
       `🧑‍🤝‍🧑รายละเอียดงานศพ ${rel} พนักงานเสียชีวิต`,
       `📍ชื่อพนักงาน: ${v('empName')}`,
-      `รหัส: ${v('empId')}`,
+      `รหัสพนักงาน : ${v('empId')}`,
       `ตำแหน่ง: ${v('empPosition')}`,
-      `แผนก: ${v('empDept')}`,
-      `Line: ${v('empLine')}`,
+      `แผนก : ${stripBP(v('empDept'))}`,
+      `ไลน์ : ${v('empLine')}`,
       `เบอร์โทร: ${digitsOnly(v('empPhone'))}`,
       ...siblingLines,
       ``,
@@ -959,16 +960,18 @@
       `เสียชีวิตวันที่: ${formatThaiDate(v('deathDate'))}`,
       `สาเหตุการเสียชีวิต: ${v('deathCause')}`,
       ``,
-      `🔵สวดอภิธรรมศพ`,
-      nightsText(),
-      `วันที่: ${formatThaiDate(v('prayDate'))}`,
+      `🔵สวดอภิธรรมศพ : จำนวนทั้งหมด ${nights} คืน`,
+      `ตั้งแต่วันที่: ${formatThaiRange(prayStart, nights)}`,
+      `วันที่: ${formatThaiDate(prayStart)}`,
       `เวลา: ${formatThaiTime(v('prayTime'))}`,
+      ``,
       `สถานที่: ${prayPlace}`,
       `แผนที่: ${v('prayMap')}`,
       ``,
       `🟢ฌาปนกิจ`,
       `วันที่: ${formatThaiDate(v('cremDate'))}`,
       `เวลา: ${formatThaiTime(v('cremTime'))}`,
+      ``,
       `สถานที่: ${cremPlaceText}`
     ];
     // ระบุสถานที่ใหม่ → แสดงแผนที่ของฌาปนกิจด้วย
