@@ -175,7 +175,7 @@
 <body>
 <main class="wrap">
   <header>
-    <div class="ribbon" aria-hidden="true">🖤ขอแสดงความเสียใจด้วยนะคะ🖤</div>
+    <div class="ribbon" aria-hidden="true">🖤ขอแสดงความเสียใจด้วยนะคะ จากน้องหนูนา🖤</div>
     <h1>แจ้งรายละเอียดงานศพ บุคคลในครอบครัวของพนักงาน PRODUCTION 3 (BP)</h1>
     <p>(บิดา / มารดา / บุตร / สามี / ภรรยา)</p>
     <p>พนักงานกรอกส่วนที่ 1–4 แล้วกด "สร้างข้อความสรุป" เพื่อส่งกลับมาให้น้องเสมียน/ผู้ประสานงาน</p>
@@ -945,29 +945,29 @@
     const nights = getNights() || 1;
     const prayStart = v('prayDate');
 
-    // รูปแบบข้อความ (เว้นวรรค/เว้นบรรทัดตามแบบที่กำหนด)
+    // รูปแบบข้อความ (เว้นวรรค/เว้นบรรทัด/เส้นคั่นตามแบบที่กำหนด)
+    const SEP = '________________________________________________';
     const lines = [
-      `🧑‍🤝‍🧑รายละเอียดงานศพ ${rel} พนักงานเสียชีวิต`,
-      `📍ชื่อพนักงาน: ${v('empName')}`,
+      `🧑‍🤝‍🧑รายละเอียดงานศพ ${rel} พนักงานเสียชีวิต🧑‍🤝‍🧑`,
+      `ชื่อพนักงาน: ${v('empName')}`,
       `รหัสพนักงาน : ${v('empId')}`,
       `ตำแหน่ง: ${v('empPosition')}`,
       `แผนก : ${stripBP(v('empDept'))}`,
       `ไลน์ : ${v('empLine')}`,
       `เบอร์โทร: ${digitsOnly(v('empPhone'))}`,
       ...siblingLines,
-      ``,
+      SEP,
       `🪦ชื่อ${rel}: ${v('deceasedName')}`,
       `เสียชีวิตวันที่: ${formatThaiDate(v('deathDate'))}`,
       `สาเหตุการเสียชีวิต: ${v('deathCause')}`,
-      ``,
+      SEP,
       `🔵สวดอภิธรรมศพ : จำนวนทั้งหมด ${nights} คืน`,
       `ตั้งแต่วันที่: ${formatThaiRange(prayStart, nights)}`,
-      `วันที่: ${formatThaiDate(prayStart)}`,
       `เวลา: ${formatThaiTime(v('prayTime'))}`,
       ``,
       `สถานที่: ${prayPlace}`,
       `แผนที่: ${v('prayMap')}`,
-      ``,
+      SEP,
       `🟢ฌาปนกิจ`,
       `วันที่: ${formatThaiDate(v('cremDate'))}`,
       `เวลา: ${formatThaiTime(v('cremTime'))}`,
@@ -976,21 +976,23 @@
     ];
     // ระบุสถานที่ใหม่ → แสดงแผนที่ของฌาปนกิจด้วย
     if (!isCremSamePlace()) lines.push(`แผนที่: ${v('cremMap')}`);
+    lines.push(SEP);
 
+    // ส่วนเสริม (เสมียน/Admin) — ต่อท้ายเฉพาะเมื่อเปิดใช้งาน
     if (travelOn.checked) {
       const att = getAttendees()
         .map((a, i) => `${i + 1}. ${a.name}${a.id ? ` (รหัส ${a.id})` : ''}`)
         .join('\n');
       lines.push(
-        ``,
-        `* กำหนดไปร่วมงานศพ วันที่ ${formatThaiDate(v('attendDate'))}`,
+        `🚌กำหนดไปร่วมงานศพ วันที่ ${formatThaiDate(v('attendDate'))}`,
         `พนักงานที่ไปร่วมงาน:`,
         att,
         ``,
         `ออกเดินทาง`,
         `วันที่: ${formatThaiDate(v('departDate'))}`,
         `เวลา: ${formatThaiTime(v('departTime'))}`,
-        `สถานที่: ${v('meetPoint')}`
+        `สถานที่: ${v('meetPoint')}`,
+        SEP
       );
     }
     return lines.join('\n');
